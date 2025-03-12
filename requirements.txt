@@ -4,4 +4,4 @@ bs4
 requests
 numpy
 matplotlib
-gunicorm
+gunicorn
