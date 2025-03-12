@@ -3,47 +3,25 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotações de Moedas</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 20px;
-            text-align: center;
-        }
-        h1 {
-            color: #333;
-        }
-        table {
-            width: 80%;
-            margin: 20px auto;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
-        }
-        th {
-            background-color: #4CAF50;
-            color: white;
-        }
-        img {
-            margin-top: 20px;
-            max-width: 80%;
-            border: 2px solid #333;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 
-<body>
-    <h1>Cotações de Moedas - Investing</h1>
+<body class="container mt-5">
 
-    <!-- Exibe a tabela -->
-    {{ tabela_html | safe }}
+    <h1 class="text-center mb-4">📊 Cotações de Moedas</h1>
 
-    <!-- Exibe o gráfico gerado -->
-    <h2>Gráfico de Comparação (Compra vs. Venda)</h2>
-    <img src="{{ url_for('static', filename='grafico.png') }}" alt="Gráfico de Cotações">
+    <!-- Exibe a tabela com os dados -->
+    <div class="table-responsive">
+        {{ tabela_html | safe }}
+    </div>
+
+    <h2 class="text-center mt-5">📈 Gráfico de Cotações</h2>
+    <div class="text-center">
+        <img src="{{ url_for('static', filename='grafico.png') }}" alt="Gráfico de Cotações" class="img-fluid">
+    </div>
+
 </body>
 
 </html>

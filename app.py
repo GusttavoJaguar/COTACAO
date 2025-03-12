@@ -8,8 +8,10 @@ app = Flask(__name__)
 
 # Função para limpar e converter valores numéricos
 def limpar_valor(valor):
-    # Remove os pontos e troca a vírgula por ponto
-    return float(valor.replace(".", "").replace(",", "."))
+    try:
+        return float(valor.replace(".", "").replace(",", "."))
+    except ValueError:
+        return valor
 
 # Função para realizar o Web Scraping
 def coletar_cotacoes():
@@ -32,45 +34,62 @@ def coletar_cotacoes():
     # Coleta os dados das linhas
     linhas = tabela.find_all("tr")
 
-    # Prepara a lista de cotações
-    dados = []
+    # Identifica os nomes das colunas (cabeçalhos)
+    cabecalhos = [th.text.strip() for th in tabela.find_previous("thead").find_all("th")]
 
-    for linha in linhas[1:]:
-        colunas = linha.find_all("td")
-        if len(colunas) >= 5:
-            moeda = colunas[0].text.strip()
-            try:
-                compra = limpar_valor(colunas[2].text.strip())
-                venda = limpar_valor(colunas[3].text.strip())
-            except ValueError:
-                print(f"Erro ao converter valores: {colunas[2].text}, {colunas[3].text}")
-                continue
-            variacao = colunas[4].text.strip()
-            dados.append([moeda, compra, venda, variacao])
+    # Coleta os dados das colunas
+    dados = []
+    for linha in linhas:
+        colunas = [col.text.strip() for col in linha.find_all("td")]
+        if colunas:
+            dados.append(colunas)
 
     # Cria um DataFrame com os dados
-    df = pd.DataFrame(dados, columns=["Moeda", "Compra", "Venda", "Variação"])
-    
-    # Salva em CSV
+    df = pd.DataFrame(dados, columns=cabecalhos)
+
+    # Salva os dados em CSV
     df.to_csv("cotacoes.csv", index=False, encoding='utf-8-sig')
     print("Arquivo CSV gerado com sucesso!")
 
     return df
 
-# Função para gerar gráfico e salvar em static/
+# Função para gerar um gráfico personalizado
 def gerar_grafico(df):
-    plt.figure(figsize=(10, 6))
-    plt.bar(df["Moeda"], df["Compra"], color='green', label='Compra')
-    plt.bar(df["Moeda"], df["Venda"], color='red', label='Venda', alpha=0.7)
+    # Seleciona as colunas desejadas (Compra e Venda)
+    moedas = df.iloc[:, 0]               # Primeira coluna (Moeda ou Ativo)
+    valores_compra = df.iloc[:, 2].apply(limpar_valor)  # Terceira coluna (Compra)
+    valores_venda = df.iloc[:, 3].apply(limpar_valor)   # Quarta coluna (Venda)
 
-    plt.title('Comparação de Cotações (Compra vs. Venda)')
-    plt.xlabel('Moeda')
-    plt.ylabel('Valor (R$)')
-    plt.legend()
-    plt.xticks(rotation=45)
+    # Personalização do gráfico
+    plt.figure(figsize=(14, 8))  # Tamanho do gráfico (largura, altura)
+
+    # Cria um gráfico de barras para Compra e Venda
+    plt.bar(moedas, valores_compra, color='#4CAF50', label='Compra', alpha=0.8)
+    plt.bar(moedas, valores_venda, color='#F44336', label='Venda', alpha=0.7)
+
+    # Personaliza Título e Eixos
+    plt.title('Comparação de Cotações - Compra vs Venda', fontsize=18, fontweight='bold')
+    plt.xlabel('Moedas ou Ativos', fontsize=14)
+    plt.ylabel('Valor (R$)', fontsize=14)
+
+    # Rotaciona os rótulos no eixo X
+    plt.xticks(rotation=45, fontsize=12)
+
+    # Adiciona a legenda no canto superior direito
+    plt.legend(loc='upper right', fontsize=12)
+
+    # Destaca a moeda com o maior valor de compra
+    maximo = valores_compra.idxmax()
+    plt.annotate(f'Máx: {moedas[maximo]} - R${valores_compra[maximo]:,.2f}',
+                 xy=(maximo, valores_compra[maximo]),
+                 xytext=(maximo, valores_compra[maximo] + 1),
+                 arrowprops=dict(facecolor='blue', shrink=0.05),
+                 fontsize=12, color='blue')
+
+    # Ajusta o layout para evitar cortes
     plt.tight_layout()
 
-    # Salva o gráfico como imagem
+    # Salva o gráfico em static/
     plt.savefig('static/grafico.png')
     print("Gráfico gerado com sucesso!")
 
