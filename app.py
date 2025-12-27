@@ -56,42 +56,28 @@ def coletar_cotacoes():
 
 # Função para gerar um gráfico personalizado
 def gerar_grafico(df):
-    # Seleciona as colunas desejadas (Compra e Venda)
-    moedas = df.iloc[:, 0]               # Primeira coluna (Moeda ou Ativo)
-    valores_compra = df.iloc[:, 2].apply(limpar_valor)  # Terceira coluna (Compra)
-    valores_venda = df.iloc[:, 3].apply(limpar_valor)   # Quarta coluna (Venda)
+    # Ajustando nomes das colunas conforme a imagem
+    # Supondo que df.columns[0] é 'Nome' e df.columns[5] é 'Var. %'
+    nomes = df.iloc[:, 0]
+    
+    # Limpa a variação percentual (remove o símbolo '%' e converte)
+    variacoes = df.iloc[:, 5].str.replace('%', '').apply(limpar_valor)
 
-    # Personalização do gráfico
-    plt.figure(figsize=(14, 8))  # Tamanho do gráfico (largura, altura)
+    plt.figure(figsize=(12, 6))
+    
+    # Cores condicionais: Verde para alta, Vermelho para baixa
+    cores = ['#4CAF50' if x > 0 else '#F44336' for x in variacoes]
+    
+    plt.bar(nomes, variacoes, color=cores)
 
-    # Cria um gráfico de barras para Compra e Venda
-    plt.bar(moedas, valores_compra, color='#4CAF50', label='Compra', alpha=0.8)
-    plt.bar(moedas, valores_venda, color='#F44336', label='Venda', alpha=0.7)
-
-    # Personaliza Título e Eixos
-    plt.title('Comparação de Cotações - Compra vs Venda', fontsize=18, fontweight='bold')
-    plt.xlabel('Moedas ou Ativos', fontsize=14)
-    plt.ylabel('Valor (R$)', fontsize=14)
-
-    # Rotaciona os rótulos no eixo X
-    plt.xticks(rotation=45, fontsize=12)
-
-    # Adiciona a legenda no canto superior direito
-    plt.legend(loc='upper right', fontsize=12)
-
-    # Destaca a moeda com o maior valor de compra
-    maximo = valores_compra.idxmax()
-    plt.annotate(f'Máx: {moedas[maximo]} - R${valores_compra[maximo]:,.2f}',
-                 xy=(maximo, valores_compra[maximo]),
-                 xytext=(maximo, valores_compra[maximo] + 1),
-                 arrowprops=dict(facecolor='blue', shrink=0.05),
-                 fontsize=12, color='blue')
-
-    # Ajusta o layout para evitar cortes
+    plt.title('Variação Percentual dos Índices Globais', fontsize=16, fontweight='bold')
+    plt.xlabel('Índice', fontsize=12)
+    plt.ylabel('Variação (%)', fontsize=12)
+    plt.axhline(0, color='black', linewidth=0.8, linestyle='--') # Linha no zero
+    
+    plt.xticks(rotation=45)
     plt.tight_layout()
-
-    # Salva o gráfico em static/
-    plt.savefig('static/grafico.png')
+    plt.savefig('static/grafico_variacao.png')
     print("Gráfico gerado com sucesso!")
 
 @app.route('/')
